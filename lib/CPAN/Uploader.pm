@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package CPAN::Uploader;
 # ABSTRACT: upload things to the CPAN
-
+$CPAN::Uploader::VERSION = '0.103007';
 =head1 ORIGIN
 
 This code is mostly derived from C<cpan-upload-http> by Brad Fitzpatrick, which
@@ -19,6 +19,8 @@ use HTTP::Request::Common qw(POST);
 use HTTP::Status;
 use LWP::UserAgent;
 use File::HomeDir;
+
+use constant ALT => 'tinyua';
 
 my $UPLOAD_URI = $ENV{CPAN_UPLOADER_UPLOAD_URI}
               || 'https://pause.perl.org/pause/authenquery';
