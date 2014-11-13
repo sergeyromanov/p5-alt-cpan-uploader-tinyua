@@ -110,16 +110,6 @@ sub _upload {
 
   $request->authorization_basic($self->{user}, $self->{password});
 
-  my $DEBUG_METHOD = $ENV{CPAN_UPLOADER_DISPLAY_HTTP_BODY}
-                   ? 'as_string'
-                   : 'headers_as_string';
-
-  $self->log_debug(
-    "----- REQUEST BEGIN -----\n" .
-    $request->$DEBUG_METHOD . "\n" .
-    "----- REQUEST END -------\n"
-  );
-
   # Make the request to the PAUSE web server
   $self->log("POSTing upload for $file to $uri");
   my $response = $agent->request($request);
@@ -143,7 +133,7 @@ sub _upload {
     $self->log_debug($_) for (
       "Looks OK!",
       "----- RESPONSE BEGIN -----\n" .
-      $response->$DEBUG_METHOD . "\n" .
+      $response->content . "\n" .
       "----- RESPONSE END -------\n"
     );
 
