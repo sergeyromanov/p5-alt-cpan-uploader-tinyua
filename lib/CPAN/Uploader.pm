@@ -16,7 +16,7 @@ use Carp ();
 use File::Basename ();
 use File::Spec;
 use HTTP::Request::Common qw(POST);
-use HTTP::Status;
+use HTTP::Status qw(:constants);
 use LWP::UserAgent;
 use File::HomeDir;
 
@@ -131,7 +131,7 @@ sub _upload {
   }
 
   if ($response->is_error) {
-    if ($response->code == RC_NOT_FOUND) {
+    if ($response->code == HTTP_NOT_FOUND) {
       die "PAUSE's CGI for handling messages seems to have moved!\n",
         "(HTTP response code of 404 from the ", $self->target, " web server)\n",
         "It used to be: ", $uri, "\n",
