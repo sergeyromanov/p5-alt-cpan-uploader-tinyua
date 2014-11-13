@@ -15,7 +15,7 @@ use Getopt::Long::Descriptive 0.084;
     -v --verbose       enable verbose logging
     -h --help          display this help message
     --dry-run          do not actually upload anything
-                     
+
     -u --user          your PAUSE username
     -p --password      the password to your PAUSE account
     -d --directory     a dir in your CPAN space in which to put the file
@@ -57,7 +57,7 @@ $ARGV[0] = '--verbose' if @ARGV == 2 and $ARGV[0] eq '-verbose';
 
 # Process arguments
 my ($opt, $usage) = describe_options(
-	"usage: %c [options] file-to-upload",
+  "usage: %c [options] file-to-upload",
 
   [ "verbose|v" => "enable verbose logging" ],
   [ "help|h"    => "display this help message" ],
