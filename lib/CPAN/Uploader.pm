@@ -78,7 +78,6 @@ sub _ua_string {
   return "$class/$version";
 }
 
-sub uri { shift->{upload_uri} || $UPLOAD_URI }
 sub target { shift->{target} || 'PAUSE' }
 
 sub _upload {
