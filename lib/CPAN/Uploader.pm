@@ -14,10 +14,11 @@ into this module.
 
 use Carp ();
 use File::Basename ();
+use File::HomeDir ();
 use File::Spec;
-use HTTP::Request::Common qw(POST);
-use LWP::UserAgent;
-use File::HomeDir;
+use HTTP::Tiny::UA;
+use HTTP::Tiny::Multipart;
+use URI;
 
 use constant ALT => 'tinyua';
 
@@ -85,48 +86,43 @@ sub _upload {
 
   $self->log("registering upload with " . $self->target . " web server");
 
-  my $agent = LWP::UserAgent->new;
-  $agent->agent( $self->_ua_string );
-
-  $agent->env_proxy;
-  $agent->proxy(http => $self->{http_proxy}) if $self->{http_proxy};
-
-  my $uri = $self->{upload_uri} || $UPLOAD_URI;
-
-  my $request = POST(
-    $uri,
-    Content_Type => 'form-data',
-    Content      => {
-      HIDDENNAME                        => $self->{user},
-      CAN_MULTIPART                     => 1,
-      pause99_add_uri_upload            => File::Basename::basename($file),
-      SUBMIT_pause99_add_uri_httpupload => " Upload this file from my disk ",
-      pause99_add_uri_uri               => "",
-      pause99_add_uri_httpupload        => [ $file ],
-      ($self->{subdir} ? (pause99_add_uri_subdirtext => $self->{subdir}) : ()),
-    },
+  my $agent = HTTP::Tiny::UA->new(
+    agent => $self->_ua_string,
+    ($self->{http_proxy} ? (http_proxy => $self->{http_proxy}) : ()),
   );
 
-  $request->authorization_basic($self->{user}, $self->{password});
+  my $uri = URI->new($self->{upload_uri} || $UPLOAD_URI);
+  $uri->userinfo(join ':', $self->{user}, $self->{password});
 
   # Make the request to the PAUSE web server
   $self->log("POSTing upload for $file to $uri");
-  my $response = $agent->request($request);
+  my $response = $agent->post_multipart($uri, {
+    HIDDENNAME                        => $self->{user},
+    CAN_MULTIPART                     => 1,
+    pause99_add_uri_upload            => File::Basename::basename($file),
+    SUBMIT_pause99_add_uri_httpupload => " Upload this file from my disk ",
+    pause99_add_uri_uri               => "",
+    pause99_add_uri_httpupload        => {
+      filename => $file,
+      content  => do {open my $fh, '<', $file; binmode $fh; local $/ = <$fh>},
+    },
+    ($self->{subdir} ? (pause99_add_uri_subdirtext => $self->{subdir}) : ()),
+  });
 
   # So, how'd we do?
   if (not defined $response) {
     die "Request completely failed - we got undef back: $!";
   }
 
-  if ($response->is_error) {
-    if ($response->code == 404) {
-      die "PAUSE's CGI for handling messages seems to have moved!\n",
+  if (!$response->success) {
+    if ($response->status eq '404') {
+      die $self->target, "'s CGI for handling messages seems to have moved!\n",
         "(HTTP response code of 404 from the ", $self->target, " web server)\n",
         "It used to be: ", $uri, "\n",
-        "Please inform the maintainer of $self.\n";
+        "Please inform the maintainer of @{[__PACKAGE__]}.\n";
     } else {
-      die "request failed with error code ", $response->code,
-        "\n  Message: ", $response->message, "\n";
+      die "request failed with error code ", $response->status,
+        "\n  Message: ", $response->reason, "\n";
     }
   } else {
     $self->log_debug($_) for (
@@ -136,7 +132,7 @@ sub _upload {
       "----- RESPONSE END -------\n"
     );
 
-    $self->log($self->target . " add message sent ok [" . $response->code . "]");
+    $self->log($self->target . " add message sent ok [" . $response->status . "]");
   }
 }
 
