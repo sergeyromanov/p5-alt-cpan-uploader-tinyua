@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 package Alt::CPAN::Uploader::tinyua;
+our $VERSION = 0.000002;
 use Alt::Assert;
 1 && q[Clutch - Wishbone];
 
@@ -16,7 +17,7 @@ Alt::CPAN::Uploader::tinyua ‒ because we are too hip to use L<LWP::UserAgent>
 
 =head1 VERSION
 
-version 0.000001
+version 0.000002
 
 =head1 DESCRIPTION
 
